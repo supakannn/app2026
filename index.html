@@ -3,36 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหารค่าตี้ 🍻</title>
+    <title>ตี้ไหน (Tee-Nhai) 🍕</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>ระบบหารค่าตี้ 🍻</h1>
-        
-        <form id="expenseForm">
-            <input type="text" id="name" placeholder="ชื่อเพื่อน (เช่น เอ, บี)" required>
-            <input type="number" id="amount" placeholder="ออกเงินไปเท่าไหร่ (บาท)" required min="0">
-            <button type="submit" class="btn-primary">เพิ่มข้อมูล</button>
-        </form>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>ตี้ไหน 🍕</h1>
+            <p>หาเพื่อนหาร หาคนจอยตี้!</p>
+        </header>
 
-        <div class="section">
-            <h2>รายการที่จ่ายแล้ว</h2>
-            <ul id="expenseList" class="list"></ul>
-            <div class="total-box">
-                ยอดรวมทั้งหมด: <span id="totalAmount">0</span> บาท
+        <main class="feed-container">
+            <div id="partyList">
+                <div class="loading">กำลังโหลดตี้...</div>
+            </div>
+        </main>
+
+        <button id="fabBtn" class="fab">+</button>
+
+        <div id="partyModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeModal">&times;</span>
+                <h2>เปิดตี้ใหม่ 🎉</h2>
+                <form id="partyForm">
+                    <div class="input-group">
+                        <label>ชื่อกิจกรรม</label>
+                        <input type="text" id="activityName" placeholder="เช่น หมูกระทะหน้ามอ, ตีแบด" required>
+                    </div>
+                    <div class="input-group">
+                        <label>ขาดกี่คน?</label>
+                        <input type="number" id="missingPeople" placeholder="ระบุจำนวนคน (เช่น 2)" required min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Line ID สำหรับติดต่อ</label>
+                        <input type="text" id="contactInfo" placeholder="เช่น @mylineid" required>
+                    </div>
+                    <button type="submit" class="btn-submit">เปิดตี้เลย!</button>
+                </form>
             </div>
         </div>
-
-        <div class="section">
-            <button id="calculateBtn" class="btn-success">คำนวณการหารเงิน 💸</button>
-            <div id="resultArea" style="display: none;">
-                <h2>สรุปใครต้องโอนให้ใคร:</h2>
-                <ul id="resultList" class="list result-list"></ul>
-            </div>
-        </div>
-
-        <button id="clearBtn" class="btn-danger">รีเซ็ตวงตี้ (ลบข้อมูลทั้งหมด)</button>
     </div>
 
     <script type="module" src="app.js"></script>
