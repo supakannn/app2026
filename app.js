@@ -1,8 +1,8 @@
-// Import Firebase SDKs (Modular Version)
+// Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Firebase Configuration ของคุณ
+// Firebase Configuration (เอามาจากข้อมูลของคุณ)
 const firebaseConfig = {
   apiKey: "AIzaSyDxvOSd5EJV_f7aqRxADsoguitfrL4OvSk",
   authDomain: "supakan-96b00.firebaseapp.com",
@@ -16,130 +16,97 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const expensesCol = collection(db, "expenses"); // สร้าง Collection ชื่อ expenses
+const partiesCol = collection(db, "parties"); // Collection ชื่อ parties
 
-// ตัวแปรเก็บข้อมูลฝั่ง Frontend
-let expenseData = [];
+// DOM Elements
+const partyList = document.getElementById("partyList");
+const fabBtn = document.getElementById("fabBtn");
+const partyModal = document.getElementById("partyModal");
+const closeModal = document.getElementById("closeModal");
+const partyForm = document.getElementById("partyForm");
 
-// ดึง Elements จาก HTML
-const form = document.getElementById("expenseForm");
-const expenseList = document.getElementById("expenseList");
-const totalAmountSpan = document.getElementById("totalAmount");
-const calculateBtn = document.getElementById("calculateBtn");
-const resultArea = document.getElementById("resultArea");
-const resultList = document.getElementById("resultList");
-const clearBtn = document.getElementById("clearBtn");
-
-// 1. ดึงข้อมูลจาก Firestore แบบ Realtime
-onSnapshot(expensesCol, (snapshot) => {
-    expenseData = [];
-    let total = 0;
-    expenseList.innerHTML = "";
-
-    snapshot.forEach((doc) => {
-        const data = doc.data();
-        expenseData.push({ id: doc.id, ...data });
-        total += data.amount;
-
-        // แสดงผลรายการ
-        const li = document.createElement("li");
-        li.innerHTML = `<span>${data.name}</span> <span>${data.amount.toLocaleString()} บาท</span>`;
-        expenseList.appendChild(li);
-    });
-
-    totalAmountSpan.textContent = total.toLocaleString();
-    resultArea.style.display = "none"; // ซ่อนผลลัพธ์ไปก่อนถ้ามีการอัปเดตข้อมูล
+// 1. ระบบเปิด/ปิด Modal (ฟอร์มตั้งตี้)
+fabBtn.addEventListener("click", () => {
+    partyModal.style.display = "flex";
 });
 
-// 2. เพิ่มข้อมูลลง Firestore
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById("name").value.trim();
-    const amountInput = parseFloat(document.getElementById("amount").value);
+closeModal.addEventListener("click", () => {
+    partyModal.style.display = "none";
+});
 
-    if (nameInput && amountInput >= 0) {
-        try {
-            await addDoc(expensesCol, {
-                name: nameInput,
-                amount: amountInput
-            });
-            form.reset();
-        } catch (error) {
-            console.error("Error adding document: ", error);
-            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-        }
+// ปิด Modal เมื่อคลิกพื้นที่ว่างสีดำ
+window.addEventListener("click", (e) => {
+    if (e.target === partyModal) {
+        partyModal.style.display = "none";
     }
 });
 
-// 3. คำนวณการหารเงินอย่างลงตัว (Split Algorithm)
-calculateBtn.addEventListener("click", () => {
-    if (expenseData.length === 0) {
-        alert("ยังไม่มีข้อมูลการจ่ายเงินครับ!");
+// 2. ดึงข้อมูลจาก Firestore แบบ Realtime (เรียงจากใหม่ไปเก่า)
+const q = query(partiesCol, orderBy("createdAt", "desc"));
+
+onSnapshot(q, (snapshot) => {
+    partyList.innerHTML = ""; // ล้างหน้าจอเก่าออก
+    
+    if (snapshot.empty) {
+        partyList.innerHTML = "<div class='loading'>ยังไม่มีตี้เปิดเลย... มาเป็นคนแรกสิ!</div>";
         return;
     }
 
-    // รวมเงินที่แต่ละคนจ่าย (กรณีชื่อเดียวกันจ่ายหลายรอบ)
-    const personTotals = {};
-    let grandTotal = 0;
-
-    expenseData.forEach(item => {
-        if (!personTotals[item.name]) personTotals[item.name] = 0;
-        personTotals[item.name] += item.amount;
-        grandTotal += item.amount;
+    snapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        // สร้างการ์ดตี้
+        const card = document.createElement("div");
+        card.className = "party-card";
+        card.innerHTML = `
+            <div class="party-header">
+                <div class="party-title">${data.activity_name}</div>
+                <div class="badge">ขาด ${data.missing_people} คน</div>
+            </div>
+            <div class="contact-box">
+                <span>ติดต่อจอยตี้ 👇</span>
+                <strong>Line: ${data.contact_info}</strong>
+            </div>
+        `;
+        partyList.appendChild(card);
     });
-
-    const peopleCount = Object.keys(personTotals).length;
-    const average = grandTotal / peopleCount; // ค่าเฉลี่ยที่ทุกคนต้องจ่าย
-
-    const debtors = []; // คนที่ต้องจ่ายเพิ่ม (จ่ายไปน้อยกว่าค่าเฉลี่ย)
-    const creditors = []; // คนที่ต้องได้เงินคืน (จ่ายไปมากกว่าค่าเฉลี่ย)
-
-    for (const [name, paidAmount] of Object.entries(personTotals)) {
-        const balance = paidAmount - average;
-        if (balance < -0.01) {
-            debtors.push({ name, amount: Math.abs(balance) });
-        } else if (balance > 0.01) {
-            creditors.push({ name, amount: balance });
-        }
-    }
-
-    // จับคู่โอนเงิน
-    resultList.innerHTML = "";
-    let i = 0, j = 0;
-
-    while (i < debtors.length && j < creditors.length) {
-        const debtor = debtors[i];
-        const creditor = creditors[j];
-        const transferAmount = Math.min(debtor.amount, creditor.amount);
-
-        const li = document.createElement("li");
-        li.textContent = `💸 ${debtor.name} ต้องโอนให้ ${creditor.name} จำนวน ${transferAmount.toFixed(2)} บาท`;
-        resultList.appendChild(li);
-
-        debtor.amount -= transferAmount;
-        creditor.amount -= transferAmount;
-
-        if (debtor.amount < 0.01) i++;
-        if (creditor.amount < 0.01) j++;
-    }
-
-    // ถ้าทุกคนจ่ายเท่ากันหมด
-    if (resultList.innerHTML === "") {
-        const li = document.createElement("li");
-        li.textContent = "🎉 ทุกคนจ่ายเท่ากันหมดแล้ว ไม่ต้องมีใครโอน!";
-        resultList.appendChild(li);
-    }
-
-    resultArea.style.display = "block";
 });
 
-// 4. ล้างข้อมูล (เคลียร์ฐานข้อมูล)
-clearBtn.addEventListener("click", async () => {
-    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการเคลียร์ข้อมูลวงตี้ทั้งหมด?")) {
-        const querySnapshot = await getDocs(expensesCol);
-        querySnapshot.forEach(async (document) => {
-            await deleteDoc(doc(db, "expenses", document.id));
+// 3. บันทึกข้อมูลตี้ใหม่
+partyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    // ดึงค่าจากฟอร์ม
+    const activityName = document.getElementById("activityName").value;
+    const missingPeople = parseInt(document.getElementById("missingPeople").value);
+    const contactInfo = document.getElementById("contactInfo").value;
+
+    // ปุ่ม Submit แสดงสถานะกำลังโหลด (UX ที่ดี)
+    const submitBtn = partyForm.querySelector('.btn-submit');
+    submitBtn.textContent = "กำลังเปิดตี้...";
+    submitBtn.disabled = true;
+
+    try {
+        await addDoc(partiesCol, {
+            activity_name: activityName,
+            missing_people: missingPeople,
+            contact_info: contactInfo,
+            createdAt: serverTimestamp() // บันทึกเวลาจาก Server
         });
-        resultArea.style.display = "none";
+        
+        // รีเซ็ตฟอร์มและปิด Modal
+        partyForm.reset();
+        partyModal.style.display = "none";
+        alert("เปิดตี้สำเร็จ! รอมิตรสหายทักไปได้เลย 🎉");
+        
+    } catch (error) {
+        console.error("Error adding document: ", error);
+        
+        // หมายเหตุ: หากติด Error สิทธิ์การเข้าถึง (Permission Denied) 
+        // ต้องไปปรับ Firebase Firestore Rules ให้เป็น allow read, write: if true; ชั่วคราวครับ
+        alert("เกิดข้อผิดพลาด ลองเช็คสิทธิ์ (Rules) ใน Firebase ดูนะครับ");
+    } finally {
+        submitBtn.textContent = "เปิดตี้เลย!";
+        submitBtn.disabled = false;
     }
 });
