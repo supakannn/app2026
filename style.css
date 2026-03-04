@@ -1,90 +1,198 @@
 * {
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    background-color: #f3f4f6;
-    color: #333;
+    background-color: #f0f2f5;
     display: flex;
     justify-content: center;
-    padding: 20px;
 }
 
-.container {
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.app-container {
     width: 100%;
-    max-width: 500px;
+    max-width: 480px; /* ขนาดกว้างพอดีกับมือถือ */
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    position: relative;
 }
 
-h1 {
-    text-align: center;
-    color: #4f46e5;
-    margin-bottom: 20px;
-}
-
-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    flex: 1;
-}
-
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+.app-header {
+    background-color: #ff5a5f;
     color: white;
-    transition: 0.3s;
+    padding: 20px;
+    text-align: center;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.btn-primary { background-color: #4f46e5; }
-.btn-primary:hover { background-color: #4338ca; }
-
-.btn-success { background-color: #10b981; width: 100%; font-size: 16px; padding: 15px;}
-.btn-success:hover { background-color: #059669; }
-
-.btn-danger { background-color: #ef4444; width: 100%; margin-top: 20px;}
-.btn-danger:hover { background-color: #b91c1c; }
-
-.section {
-    margin-bottom: 25px;
+.app-header h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
 }
 
-.list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 15px 0;
+.app-header p {
+    font-size: 14px;
+    opacity: 0.9;
 }
 
-.list li {
-    background: #f9fafb;
-    padding: 10px;
-    border-bottom: 1px solid #e5e7eb;
+.feed-container {
+    padding: 20px;
+    padding-bottom: 100px; /* เผื่อที่ให้ปุ่ม FAB */
+}
+
+/* การ์ดรายการตี้ */
+.party-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-left: 5px solid #ff5a5f;
+}
+
+.party-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-.total-box {
+.party-title {
     font-size: 18px;
     font-weight: bold;
-    text-align: right;
-    color: #111827;
+    color: #333;
 }
 
-.result-list li {
-    background: #ecfdf5;
-    color: #065f46;
-    border-left: 4px solid #10b981;
+.badge {
+    background-color: #fee2e2;
+    color: #dc2626;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.contact-box {
+    background-color: #f9fafb;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4b5563;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.contact-box strong {
+    color: #00b900; /* สีเขียว Line */
+}
+
+/* ปุ่ม FAB (Floating Action Button) */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: calc(50% - 240px + 20px); /* จัดให้อยู่ในกรอบ 480px */
+    width: 60px;
+    height: 60px;
+    background-color: #ff5a5f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 30px;
+    box-shadow: 0 4px 10px rgba(255, 90, 95, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 100;
+}
+
+@media (max-width: 480px) {
+    .fab {
+        right: 20px; /* กรณีจอมือถือเล็กๆ ให้ชิดขวาปกติ */
+    }
+}
+
+.fab:hover {
+    transform: scale(1.1);
+}
+
+/* Modal ฟอร์มเปิดตี้ */
+.modal {
+    display: none; 
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-end; /* ให้เด้งมาจากด้านล่างแบบมือถือ */
+}
+
+.modal-content {
+    background-color: white;
+    width: 100%;
+    max-width: 480px;
+    padding: 30px 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555;
+    font-weight: bold;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: #ff5a5f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.loading {
+    text-align: center;
+    color: #666;
+    padding: 20px;
 }
